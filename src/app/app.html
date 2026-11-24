@@ -1,48 +1,266 @@
-<header>
-  <nav aria-label="Menu principale">
-    <a href="#home">Davide</a>
+<a class="skip-link" href="#contenuto">Vai al contenuto</a>
 
-    <div>
-      <a href="#about">Chi sono</a>
-      <a href="#skills">Competenze</a>
-      <a href="#projects">Progetti</a>
-      <a href="#contact">Contatti</a>
-    </div>
+<header class="site-header">
+  <nav class="nav" aria-label="Menu principale">
+    <a class="nav__brand" href="#home">
+      <span class="nav__brand-mark" aria-hidden="true"></span>
+      Davide Di Biasio
+    </a>
+
+    <ul class="nav__links">
+      <li><a href="#about">Chi sono</a></li>
+      <li><a href="#skills">Competenze</a></li>
+      <li><a href="#projects">Progetti</a></li>
+      <li><a href="#contact">Contatti</a></li>
+    </ul>
   </nav>
 </header>
 
-<main>
-  <section id="home">
-    <p>Ciao, sono</p>
+<main id="contenuto" tabindex="-1">
+  <section
+    #heroEl
+    id="home"
+    class="hero"
+    aria-labelledby="hero-title"
+    (pointermove)="pointerNear($event)"
+    (pointerleave)="leaveSky()"
+    (click)="tapSky($event)"
+    [style.--sky-top]="paint().top"
+    [style.--sky-low]="paint().low"
+    [style.--sky-glow]="paint().glow"
+    [style.--sky-glow-opacity]="paint().glowOpacity"
+    [style.--sun-glow-x.%]="sunGlowX() * 100"
+    [style.--stars-visible]="starsVisible()"
+    [style.--day]="day()"
+    [class.hero--flash]="flash()"
+  >
+    <div class="hero__sky">
+      <div class="hero__stars" aria-hidden="true">
+        <canvas #starFieldEl class="hero__star-field"></canvas>
+        @if (meteor(); as m) {
+          @for (item of [m]; track item.id) {
+            <span
+              class="meteor"
+              [style.left.%]="item.x"
+              [style.top.%]="item.y"
+              [style.--dx.px]="item.dx"
+              [style.--dy.px]="item.dy"
+              [style.rotate.deg]="item.angle"
+            ></span>
+          }
+        }
+        @for (star of stars(); track star.id) {
+          <span
+            class="star sky-pos"
+            [class.star--twinkle]="star.twinkle"
+            [style.--daz]="star.daz"
+            [style.--alt]="star.alt"
+            [style.--star-opacity]="star.opacity"
+            [style.width.px]="star.size"
+            [style.height.px]="star.size"
+            [style.animation-delay.ms]="$index * 137"
+          ></span>
+        }
+      </div>
 
-    <h1>Davide Di Biasio</h1>
+      @for (planet of planets(); track planet.name) {
+        <div
+          class="planet sky-body sky-pos"
+          [class]="'planet--' + planet.name"
+          [class.sky-body--tip-start]="planet.tipStart"
+          [class.is-open]="openBody() === planet.name"
+          [class.is-hover]="hovered() === planet.name"
+          [attr.data-body]="planet.name"
+          [style.--daz]="planet.daz"
+          [style.--alt]="planet.alt"
+        >
+          <button
+            type="button"
+            class="sky-body__button"
+            [attr.aria-describedby]="'tip-' + planet.name"
+            [attr.aria-expanded]="openBody() === planet.name"
+            (click)="toggleBody(planet.name, $event)"
+          >
+            <span class="visually-hidden">{{ planet.label }}</span>
+            <svg
+              class="planet__body"
+              [attr.viewBox]="'0 0 ' + planet.sprite.w + ' ' + planet.sprite.h"
+              shape-rendering="crispEdges"
+              aria-hidden="true"
+              focusable="false"
+            >
+              @for (p of planet.sprite.pixels; track $index) {
+                <rect [attr.x]="p.x" [attr.y]="p.y" width="1" height="1" [attr.class]="'px-' + p.tone" />
+              }
+            </svg>
+          </button>
 
-    <h2>Sviluppatore web</h2>
+          <div class="sky-tip" role="tooltip" [id]="'tip-' + planet.name">
+            <p class="sky-tip__title">{{ planet.label }}</p>
+            @if (planet.name === 'pluto') {
+              <p class="sky-tip__sub">Pianeta nano</p>
+            }
+            <dl class="sky-tip__list">
+              @for (row of planet.details; track row.label) {
+                <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+              }
+            </dl>
+          </div>
+        </div>
+      }
 
-    <p>
-      Ho una formazione full-stack e sto approfondendo il frontend con Angular.
-      Qui raccolgo i progetti a cui lavoro e quello che sto imparando.
-    </p>
+      @if (sunView(); as s) {
+        <div
+          class="hero__sun sky-body sky-pos"
+          [class.hero__sun--low]="s.low"
+          [class.sky-body--tip-start]="s.tipStart"
+          [class.is-open]="openBody() === 'sun'"
+          [class.is-hover]="hovered() === 'sun'"
+          data-body="sun"
+          [class.is-hidden]="!s.visible"
+          [style.--daz]="s.daz"
+          [style.--alt]="s.alt"
+          [style.--body-deg]="s.size"
+          [style.--dimmed]="s.dimmed"
+        >
+          <button
+            type="button"
+            class="sky-body__button"
+            aria-describedby="tip-sun"
+            [attr.aria-expanded]="openBody() === 'sun'"
+            [disabled]="!s.visible"
+            (click)="toggleBody('sun', $event)"
+          >
+            <span class="visually-hidden">Sole</span>
+            <svg
+              class="hero__sun-disc"
+              [attr.viewBox]="'0 0 ' + sunSprite.w + ' ' + sunSprite.h"
+              shape-rendering="crispEdges"
+              aria-hidden="true"
+              focusable="false"
+            >
+              @for (p of sunSprite.pixels; track $index) {
+                <rect [attr.x]="p.x" [attr.y]="p.y" width="1" height="1" [attr.class]="'px-' + p.tone" />
+              }
+            </svg>
+          </button>
 
-    <div>
-      <a href="#projects">Guarda i progetti</a>
-      <a href="#contact">Contattami</a>
+          <div class="sky-tip" role="tooltip" id="tip-sun">
+            <p class="sky-tip__title">Sole</p>
+            <dl class="sky-tip__list">
+              @for (row of s.details; track row.label) {
+                <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+              }
+            </dl>
+          </div>
+        </div>
+      }
+
+      @if (moonView(); as m) {
+        <div
+          class="hero__moon sky-body sky-pos"
+          [class.hero__moon--day]="m.daytime"
+          [class.sky-body--tip-start]="m.tipStart"
+          [class.is-open]="openBody() === 'moon'"
+          [class.is-hover]="hovered() === 'moon'"
+          data-body="moon"
+          [class.is-hidden]="!m.visible"
+          [style.--daz]="m.daz"
+          [style.--alt]="m.alt"
+          [style.--body-deg]="m.size"
+          [style.--dimmed]="m.dimmed"
+        >
+          <button
+            type="button"
+            class="sky-body__button"
+            aria-describedby="tip-moon"
+            [attr.aria-expanded]="openBody() === 'moon'"
+            [disabled]="!m.visible"
+            (click)="toggleBody('moon', $event)"
+          >
+            <span class="visually-hidden">Luna</span>
+            <svg
+              class="hero__moon-disc"
+              [attr.viewBox]="'0 0 ' + moon().w + ' ' + moon().h"
+              [style.--moon-lit]="phase().illumination"
+              shape-rendering="crispEdges"
+              aria-hidden="true"
+              focusable="false"
+            >
+              @for (p of moon().pixels; track $index) {
+                <rect [attr.x]="p.x" [attr.y]="p.y" width="1" height="1" [attr.class]="'px-' + p.tone" />
+              }
+            </svg>
+          </button>
+
+          <div class="sky-tip" role="tooltip" id="tip-moon">
+            <p class="sky-tip__title">Luna</p>
+            <p class="sky-tip__sub">{{ phase().name }}</p>
+            <dl class="sky-tip__list">
+              @for (row of m.details; track row.label) {
+                <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+              }
+            </dl>
+          </div>
+        </div>
+      }
+
+      <div
+        #cloudEl
+        class="hero__clouds"
+        [class.hero__clouds--heavy]="weather().clouds > 0.8"
+        aria-hidden="true"
+      ></div>
+
+      <canvas #boltEl class="hero__bolt" aria-hidden="true"></canvas>
+
+      <canvas #panoEl class="hero__panorama" [attr.width]="panoW" [attr.height]="panoH" aria-hidden="true"></canvas>
+
+      @if (weather().rain > 0) {
+        <div
+          #rainEl
+          class="hero__rain"
+          [class.hero__rain--snow]="weather().snow"
+          [class.hero__rain--storm]="weather().storm"
+          [style.--rain]="weather().rain"
+          aria-hidden="true"
+        ></div>
+      }
+    </div>
+
+    <div class="hero__inner">
+      <p class="hud-label hero__role">Sviluppatore web</p>
+
+      <h1 id="hero-title" class="hero__name">
+        <span>Davide</span>&ngsp;<span>Di Biasio</span>
+      </h1>
+
+      <p class="hero__lead">
+        Ho una formazione full-stack e attualmente sto approfondendo l’AI.
+        Qui raccolgo i progetti a cui lavoro e quello che sto imparando.
+      </p>
+
+      <div class="hero__actions">
+        <a class="button button--primary" href="#projects">Guarda i progetti</a>
+        <a class="button button--ghost" href="#contact">Contattami</a>
+      </div>
     </div>
   </section>
 
-  <section id="about">
-    <div class="section-container">
-      <h2>Chi sono</h2>
+  <section id="about" class="section" aria-labelledby="about-title">
+    <div class="section__grid">
+      <h2 id="about-title" class="section__title">Chi sono</h2>
 
-      <div class="about-content">
-        <p>
-          Sono di Fondi e ho studiato sviluppo full-stack all’ITS ICT Academy
-          di Roma. Durante un tirocinio di sei mesi in EcuBit ho lavorato
-          con Java, Spring Boot, JavaScript e TypeScript.
+      <div class="section__body prose">
+        <p class="prose__lead">
+          Sono di Fondi (LT) e mi sono diplomato perito informatico
+          all’Istituto Tecnico. Poi ho studiato sviluppo full-stack all’ITS
+          ICT Academy di Roma. Durante un tirocinio di sei mesi in EcuBit ho
+          lavorato con Java, Spring Boot, JavaScript e TypeScript.
         </p>
 
         <p>
-          Adesso mi sto concentrando sul frontend: mi piace poter vedere
+          Adesso mi sto concentrando sull’AI. Mi piace poter vedere
           una pagina prendere forma mentre la costruisco.
           Questo portfolio è uno dei progetti con cui sto facendo pratica.
         </p>
@@ -56,37 +274,65 @@
     </div>
   </section>
 
-  <section id="skills" aria-labelledby="skills-title">
-    <div class="section-container">
-      <h2 id="skills-title">Competenze</h2>
+  <section id="skills" class="section" aria-labelledby="skills-title">
+    <div class="section__grid">
+      <h2 id="skills-title" class="section__title">Competenze</h2>
 
-      <p class="skills-intro">
-        Queste sono le tecnologie che ho usato tra formazione, tirocinio
-        e progetti personali. In questo periodo sto facendo pratica
-        soprattutto con Angular, TypeScript e SCSS.
-      </p>
+      <div class="section__body">
+        <p class="section__intro">
+          Queste sono le tecnologie che ho usato tra formazione, tirocinio
+          e progetti personali. In questo periodo lavoro soprattutto
+          con GPT e Claude.
+        </p>
 
-      <ul class="skills-list">
-        <li>HTML</li>
-        <li>CSS / SCSS</li>
-        <li>JavaScript</li>
-        <li>TypeScript</li>
-        <li>Angular</li>
-        <li>Java</li>
-        <li>Spring Boot</li>
-        <li>SQL</li>
-        <li>Git / GitHub</li>
-      </ul>
+        <div class="skills">
+          <div class="skills__group">
+            <h3 class="hud-label skills__heading">AI</h3>
+            <ul class="skills__slots">
+              <li class="slot slot--focus">GPT <span class="slot__tag">focus attuale</span></li>
+              <li class="slot slot--focus">Claude <span class="slot__tag">focus attuale</span></li>
+            </ul>
+          </div>
+
+          <div class="skills__group">
+            <h3 class="hud-label skills__heading">Frontend</h3>
+            <ul class="skills__slots">
+              <li class="slot">HTML</li>
+              <li class="slot">CSS / SCSS</li>
+              <li class="slot">JavaScript</li>
+              <li class="slot">TypeScript</li>
+              <li class="slot">Angular</li>
+            </ul>
+          </div>
+
+          <div class="skills__group">
+            <h3 class="hud-label skills__heading">Backend</h3>
+            <ul class="skills__slots">
+              <li class="slot">Java</li>
+              <li class="slot">Spring Boot</li>
+              <li class="slot">SQL</li>
+            </ul>
+          </div>
+
+          <div class="skills__group">
+            <h3 class="hud-label skills__heading">Strumenti</h3>
+            <ul class="skills__slots">
+              <li class="slot">Git / GitHub</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section id="projects">
-    <div class="section-container">
-      <h2>Progetti e lavori in corso</h2>
+  <section id="projects" class="section" aria-labelledby="projects-title">
+    <div class="section__grid">
+      <h2 id="projects-title" class="section__title">Progetti e lavori in corso</h2>
 
-      <div class="projects-list">
-        <article class="project-card">
-          <h3>Il mio portfolio</h3>
+      <div class="section__body projects">
+        <article class="project project--featured">
+          <p class="hud-label project__status project__status--accent">Online</p>
+          <h3 class="project__title">Il mio portfolio</h3>
 
           <p>
             Il sito che stai visitando. Lo sto costruendo con Angular,
@@ -94,21 +340,24 @@
             Uso Git e GitHub per tenere traccia delle modifiche.
           </p>
 
-          <div class="project-tech">
-            <span>Angular</span>
-            <span>TypeScript</span>
-            <span>SCSS</span>
-          </div>
+          <ul class="project__tech" aria-label="Tecnologie">
+            <li>Angular</li>
+            <li>TypeScript</li>
+            <li>SCSS</li>
+          </ul>
 
-          <p>
-            <a href="https://github.com/ZiboNazionale/zibo-dev-portfolio" target="_blank" rel="noopener noreferrer">
-              Guarda il codice su GitHub ↗
-            </a>
-          </p>
+          <a class="text-link" href="https://github.com/ZiboNazionale/zibo-dev-portfolio" target="_blank" rel="noopener noreferrer">
+            Guarda il codice su GitHub
+            <svg class="text-link__icon" viewBox="0 0 8 8" width="12" height="12" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+              <path d="M2 0h6v6H7V2H6v1H5v1H4v1H3v1H2v1H1v1H0V7h1V6h1V5h1V4h1V3h1V2h1V1H2z" fill="currentColor" />
+            </svg>
+            <span class="visually-hidden">(si apre in una nuova scheda)</span>
+          </a>
         </article>
 
-        <article class="project-card">
-          <h3>Un’applicazione full-stack</h3>
+        <article class="project">
+          <p class="hud-label project__status project__status--amber">Idea</p>
+          <h3 class="project__title">Un’applicazione full-stack</h3>
 
           <p>
             Il prossimo progetto che vorrei sviluppare: un’applicazione
@@ -116,13 +365,16 @@
             È ancora un’idea da definire.
           </p>
 
-          <div class="project-tech">
-            <span>Da progettare</span>
-          </div>
+          <ul class="project__tech" aria-label="Tecnologie previste">
+            <li>Angular</li>
+            <li>Spring Boot</li>
+            <li>SQL</li>
+          </ul>
         </article>
 
-        <article class="project-card">
-          <h3>Esperimenti con Unity</h3>
+        <article class="project">
+          <p class="hud-label project__status project__status--lilac">In apprendimento</p>
+          <h3 class="project__title">Esperimenti con Unity</h3>
 
           <p>
             Sto imparando le basi dello sviluppo di videogiochi,
@@ -130,49 +382,54 @@
             Mi piacerebbe ambientare un gioco nella mia città, Fondi.
           </p>
 
-          <div class="project-tech">
-            <span>Unity</span>
-            <span>C#</span>
-            <span>In apprendimento</span>
-          </div>
+          <ul class="project__tech" aria-label="Tecnologie">
+            <li>Unity</li>
+            <li>C#</li>
+          </ul>
         </article>
       </div>
     </div>
   </section>
 
-  <section id="contact">
-    <div class="section-container">
-      <h2>Contatti</h2>
+  <section id="contact" class="contact" aria-labelledby="contact-title">
+    <div class="contact__panel">
+      <h2 id="contact-title" class="contact__title">
+        Sto cercando un’opportunità di lavoro nello sviluppo software o in ambiti simili.
+      </h2>
 
-      <div class="contact-content">
-        <p>
-          Sto cercando un’opportunità di lavoro come sviluppatore.
-          Per parlare di lavoro o di un progetto, scrivimi via email
-          oppure contattami su LinkedIn.
-        </p>
+      <p class="contact__text">
+        Per parlare di lavoro o di un progetto, scrivimi via email
+        oppure contattami su LinkedIn.
+      </p>
 
-        <div class="contact-links">
-          <a href="mailto:davidedibiasio98&#64;gmail.com">
-            Scrivimi via email
-          </a>
+      <div class="contact__links">
+        <a class="button button--primary" href="mailto:davidedibiasio98&#64;gmail.com">
+          Scrivimi via email
+        </a>
 
-          <a href="https://www.linkedin.com/in/davide-di-biasio-234b562a1/" target="_blank" rel="noopener noreferrer">
-            LinkedIn ↗
-          </a>
+        <a class="button button--ghost" href="https://www.linkedin.com/in/davide-di-biasio-234b562a1/" target="_blank" rel="noopener noreferrer">
+          LinkedIn
+          <svg class="text-link__icon" viewBox="0 0 8 8" width="12" height="12" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+            <path d="M2 0h6v6H7V2H6v1H5v1H4v1H3v1H2v1H1v1H0V7h1V6h1V5h1V4h1V3h1V2h1V1H2z" fill="currentColor" />
+          </svg>
+          <span class="visually-hidden">(si apre in una nuova scheda)</span>
+        </a>
 
-          <a href="https://github.com/ZiboNazionale" target="_blank" rel="noopener noreferrer">
-            GitHub ↗
-          </a>
-        </div>
+        <a class="button button--ghost" href="https://github.com/ZiboNazionale" target="_blank" rel="noopener noreferrer">
+          GitHub
+          <svg class="text-link__icon" viewBox="0 0 8 8" width="12" height="12" shape-rendering="crispEdges" aria-hidden="true" focusable="false">
+            <path d="M2 0h6v6H7V2H6v1H5v1H4v1H3v1H2v1H1v1H0V7h1V6h1V5h1V4h1V3h1V2h1V1H2z" fill="currentColor" />
+          </svg>
+          <span class="visually-hidden">(si apre in una nuova scheda)</span>
+        </a>
       </div>
     </div>
   </section>
 </main>
 
-<footer>
-  <div class="section-container">
-    <p>Davide Di Biasio · Fondi</p>
-  </div>
+<footer class="site-footer">
+  <p>Davide Di Biasio</p>
+  <a class="text-link" href="#home">Torna all’inizio</a>
 </footer>
 
 <router-outlet />
