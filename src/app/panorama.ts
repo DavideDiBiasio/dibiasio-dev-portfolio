@@ -46,7 +46,6 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 /** Ogni colore ha una versione notturna (illuminata dalla luna) e una diurna. */
 const PALETTE = {
-  haze: ['#2d3370', '#c4d6e8'],
   mountainFar: ['#1c2048', '#7c93ab'],
   mountainFarRim: ['#30366f', '#9bb0c4'],
   mountain: ['#13153a', '#5e7553'],
@@ -199,14 +198,6 @@ export function drawPanorama(ctx: CanvasRenderingContext2D, opts: PanoramaOption
 
   /** Una luce artificiale, visibile solo quando fa buio. */
   const lamp = (x: number, y: number, c: RGB, a: number) => put(x, y, c, a * lights);
-
-  /* --- Foschia sopra l'orizzonte --- */
-  for (let y = HORIZON - 16; y < HORIZON; y++) {
-    const t = (y - (HORIZON - 16)) / 16;
-    for (let x = 0; x < W; x++) {
-      if (bayer(x, y) < t * t) put(x, y, C.haze, 0.55);
-    }
-  }
 
   /* --- Isole pontine sull'orizzonte (Zannone, Ponza, Palmarola, a ~70 km) --- */
   const islands: Array<ReadonlyArray<readonly [number, number]>> = [
