@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "2d-games": {
+      "source": "vudovn/ag-kit",
+      "commit": "549ba3dc2eb1d40fccb5b6d792eba4101c80cd69",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/game-development/2d-games/SKILL.md",
+      "computedHash": "247223df21a932053df5482f54b3cf7011b89890f20d531722997d151f1f903c"
+    }
+  }
+}
