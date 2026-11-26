@@ -1,0 +1,14 @@
+{
+    "name": "MemeArena.UI",
+    "rootNamespace": "MemeArena.UI",
+    "references": ["MemeArena.Core"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

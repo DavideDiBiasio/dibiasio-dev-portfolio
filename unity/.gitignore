@@ -1,0 +1,17 @@
+# Unity: tutto ciò che l'editor rigenera da solo.
+MemeArena/[Ll]ibrary/
+MemeArena/[Tt]emp/
+MemeArena/[Oo]bj/
+MemeArena/[Ll]ogs/
+MemeArena/[Uu]ser[Ss]ettings/
+MemeArena/[Bb]uild/
+MemeArena/[Bb]uilds/
+MemeArena/*.csproj
+MemeArena/*.sln
+MemeArena/.vs/
+MemeArena/.vscode/
+MemeArena/TestResults*.xml
+
+# Progetti .NET di controllo.
+dotnet-*/bin/
+dotnet-*/obj/

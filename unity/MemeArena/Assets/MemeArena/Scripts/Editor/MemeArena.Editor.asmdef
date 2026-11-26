@@ -1,0 +1,14 @@
+{
+    "name": "MemeArena.Editor",
+    "rootNamespace": "MemeArena.EditorTools",
+    "references": ["MemeArena.Core", "MemeArena.UI"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
