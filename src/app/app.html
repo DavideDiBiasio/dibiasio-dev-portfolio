@@ -11,6 +11,7 @@
       <li><a href="#about">Chi sono</a></li>
       <li><a href="#skills">Competenze</a></li>
       <li><a href="#projects">Progetti</a></li>
+      <li class="nav__wide"><a href="#play">Gioca</a></li>
       <li><a href="#contact">Contatti</a></li>
     </ul>
   </nav>
@@ -356,6 +357,27 @@
         </article>
 
         <article class="project">
+          <p class="hud-label project__status">Online</p>
+          <h3 class="project__title">Caccia al bug</h3>
+
+          <p>
+            Un minigioco arcade in pixel art, fatto da zero dentro questo sito:
+            raccogli le tecnologie del mio stack e schiva i bug.
+            Motore a passo fisso separato dal disegno e testato,
+            font bitmap e suoni generati con Web Audio, comandi da tastiera e touch.
+          </p>
+
+          <ul class="project__tech" aria-label="Tecnologie">
+            <li>Angular</li>
+            <li>TypeScript</li>
+            <li>Canvas</li>
+            <li>Web Audio</li>
+          </ul>
+
+          <a class="text-link" href="#play">Prova a giocare</a>
+        </article>
+
+        <article class="project">
           <p class="hud-label project__status project__status--amber">Idea</p>
           <h3 class="project__title">Un’applicazione full-stack</h3>
 
@@ -387,6 +409,21 @@
             <li>C#</li>
           </ul>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="play" class="section" aria-labelledby="play-title">
+    <div class="section__grid">
+      <h2 id="play-title" class="section__title">Caccia al bug</h2>
+
+      <div class="section__body">
+        <p class="section__intro">
+          Una pausa di un minuto: raccogli lo stack, schiva i bug
+          e prova a battere il tuo record.
+        </p>
+
+        <app-game />
       </div>
     </div>
   </section>

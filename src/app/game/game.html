@@ -1,0 +1,88 @@
+<div
+  #frame
+  class="game"
+  tabindex="0"
+  role="application"
+  aria-label="Caccia al bug. Frecce o A e D per muoverti, P per la pausa."
+  aria-describedby="game-help"
+  [class.game--playing]="phase() === 'playing'"
+  (keydown)="keydown($event)"
+  (keyup)="keyup($event)"
+>
+  <canvas
+    #screen
+    class="game__screen"
+    [attr.width]="width"
+    [attr.height]="height"
+    aria-hidden="true"
+    (pointermove)="pointer($event)"
+    (pointerdown)="pointer($event)"
+    (pointerup)="pointerEnd($event)"
+    (pointercancel)="pointerEnd($event)"
+  ></canvas>
+
+  @switch (phase()) {
+    @case ('ready') {
+      <div class="game__overlay">
+        <p class="hud-label game__kicker">Minigioco</p>
+        <p class="game__title">Caccia al bug</p>
+        <p class="game__text">
+          Raccogli le tecnologie del mio stack con il portatile e schiva i bug.
+          Il caffè rallenta il tempo.
+        </p>
+        <button type="button" class="button button--primary" (click)="play()">Gioca</button>
+      </div>
+    }
+    @case ('paused') {
+      <div class="game__overlay">
+        <p class="game__title">Pausa</p>
+        <button type="button" class="button button--primary" (click)="play()">Riprendi</button>
+      </div>
+    }
+    @case ('over') {
+      @if (summary(); as r) {
+        <div class="game__overlay game__overlay--over" aria-live="polite">
+          <p class="hud-label game__kicker">{{ r.record ? 'Nuovo record!' : 'Game over' }}</p>
+          <p class="game__score">{{ r.score }} <span>punti</span></p>
+          <dl class="game__stats">
+            <div><dt>Record</dt><dd>{{ r.best }}</dd></div>
+            <div><dt>Livello</dt><dd>{{ r.level }}</dd></div>
+            <div><dt>Serie migliore</dt><dd>{{ r.bestCombo }}</dd></div>
+          </dl>
+          <p class="game__text">
+            @if (r.stackDone) {
+              Stack completo: le hai prese tutte e dieci.
+            } @else {
+              Stack raccolto: {{ r.stack.length }} su {{ skills.length }}.
+            }
+          </p>
+          <div class="game__actions">
+            <button type="button" class="button button--primary" (click)="play()">Rigioca</button>
+            <a class="button button--ghost" href="#contact">Parliamone</a>
+          </div>
+        </div>
+      }
+    }
+  }
+</div>
+
+<div class="game__bar">
+  <p id="game-help" class="game__help">
+    <span class="game__help-keys">Tastiera: <kbd>←</kbd> <kbd>→</kbd> oppure <kbd>A</kbd> <kbd>D</kbd>, <kbd>P</kbd> per la pausa.</span>
+    <span class="game__help-touch">Su telefono: trascina il dito sullo schermo del gioco.</span>
+    Ogni 5 prese di fila il punteggio si moltiplica.
+  </p>
+
+  <div class="game__toolbar">
+    @if (phase() === 'playing') {
+      <button type="button" class="game__icon" (click)="pause()">
+        <span aria-hidden="true">II</span>
+        <span class="visually-hidden">Pausa</span>
+      </button>
+    }
+    <button type="button" class="game__icon" [attr.aria-pressed]="muted()" (click)="toggleMute()">
+      <span aria-hidden="true">{{ muted() ? '×' : '♪' }}</span>
+      <span class="visually-hidden">Audio disattivato</span>
+    </button>
+  </div>
+</div>
