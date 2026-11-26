@@ -66,6 +66,12 @@
     animation: pulse 900ms steps(2) infinite;
     border-color: #ff7a7a;
   }
+
+  /* Colpito: scossa breve che si smorza, niente di più. */
+  &.is-hit {
+    border-color: #ff7a7a;
+    animation: hit 200ms linear;
+  }
 }
 
 .bar__avatar {
@@ -515,6 +521,21 @@
   }
 }
 
+@keyframes hit {
+  20% {
+    translate: -4px 0;
+  }
+  45% {
+    translate: 3px 0;
+  }
+  70% {
+    translate: -2px 0;
+  }
+  90% {
+    translate: 1px 0;
+  }
+}
+
 @keyframes pulse {
   50% {
     opacity: 0.35;
@@ -537,6 +558,7 @@
   .slot.is-target::after,
   .slot.is-blockable::after,
   .bar__who.is-target,
+  .bar__who.is-hit,
   .spotlight,
   .dialog {
     animation: none;

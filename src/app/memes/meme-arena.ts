@@ -84,12 +84,28 @@ export class MemeArena {
     inject(DestroyRef).onDestroy(() => {
       clearTimeout(this.timer);
       clearTimeout(this.spotlightTimer);
+      clearTimeout(this.hitTimer);
     });
   }
+
+  /** Chi ha appena perso vita: il suo riquadro trema per un attimo. */
+  protected readonly hit = signal<[boolean, boolean]>([false, false]);
+  private lastLife: [number, number] = [0, 0];
+  private hitTimer: ReturnType<typeof setTimeout> | undefined;
 
   private bump(): void {
     this.rev.update((n) => n + 1);
     const g = this.g;
+    if (g) {
+      const lives: [number, number] = [g.players[0].life, g.players[1].life];
+      const hurt: [boolean, boolean] = [lives[0] < this.lastLife[0], lives[1] < this.lastLife[1]];
+      this.lastLife = lives;
+      if (hurt[0] || hurt[1]) {
+        clearTimeout(this.hitTimer);
+        this.hit.set(hurt);
+        this.hitTimer = setTimeout(() => this.hit.set([false, false]), 220);
+      }
+    }
     if (g?.winner !== null && g?.winner !== undefined) this.recordResult(g);
   }
 
@@ -116,6 +132,7 @@ export class MemeArena {
     const others = ERA_ORDER.filter((e) => e !== era);
     const foe = others[Math.floor(Math.random() * others.length)];
     this.g = newGame([era, foe]);
+    this.lastLife = [this.g.players[0].life, this.g.players[1].life];
     this.recorded = false;
     this.resetUi();
     this.bump();

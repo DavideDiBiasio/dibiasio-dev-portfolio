@@ -7,6 +7,7 @@
         <button
           type="button"
           class="bar__who"
+          [class.is-hit]="hit()[1]"
           [class.is-target]="isTarget({ kind: 'player', player: 1 })"
           [disabled]="!isTarget({ kind: 'player', player: 1 })"
           (click)="tapPlayer(1)"
@@ -151,6 +152,7 @@
         <button
           type="button"
           class="bar__who"
+          [class.is-hit]="hit()[0]"
           [class.is-target]="isTarget({ kind: 'player', player: 0 })"
           [disabled]="!isTarget({ kind: 'player', player: 0 })"
           (click)="tapPlayer(0)"
