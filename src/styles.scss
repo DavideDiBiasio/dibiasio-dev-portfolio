@@ -209,6 +209,7 @@ a {
 
 .button--ghost {
   border-color: var(--ink);
+  background-color: transparent;
   color: var(--ink);
 
   &:hover {

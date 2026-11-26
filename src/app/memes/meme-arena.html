@@ -1,0 +1,311 @@
+<div class="arena" (keydown)="keydown($event)">
+  @if (game(); as g) {
+    <!-- ======== AVVERSARIO ======== -->
+    @let foe = cpu()!;
+    <div class="side side--cpu" [style.--era]="ERAS[foe.era].color">
+      <div class="bar">
+        <button
+          type="button"
+          class="bar__who"
+          [class.is-target]="isTarget({ kind: 'player', player: 1 })"
+          [disabled]="!isTarget({ kind: 'player', player: 1 })"
+          (click)="tapPlayer(1)"
+        >
+          <span class="bar__avatar" aria-hidden="true">{{ ERAS[foe.era].art }}</span>
+          <span class="bar__name">CPU · {{ ERAS[foe.era].name }}</span>
+          <span class="bar__life" [attr.aria-label]="foe.life + ' vite'">❤ {{ foe.life }}</span>
+        </button>
+        <span class="bar__chip" title="Hype disponibile / piattaforme"
+          >⚡ {{ hype(1).free }}/{{ hype(1).total }}</span
+        >
+        <span class="bar__chip" title="Carte in mano">✋ {{ foe.hand.length }}</span>
+        <span class="bar__chip" title="Carte nel mazzo">🂠 {{ foe.library.length }}</span>
+      </div>
+
+      <ul class="row" aria-label="Creature della CPU">
+        @for (c of foe.creatures; track c.uid) {
+          <li>
+            <button
+              type="button"
+              class="slot"
+              [class.is-target]="isTarget({ kind: 'card', uid: c.uid })"
+              [class.is-attacking]="isAttacking(c.uid)"
+              [class.is-blockable]="
+                mustBlock() && g.attackers.includes(c.uid) && canBlockPending(c)
+              "
+              (click)="tapCard(c, $event)"
+            >
+              <app-meme-card [id]="c.id" [card]="c" [rev]="revision()" />
+              @if (isAttacking(c.uid)) {
+                <span class="slot__tag slot__tag--atk">Attacca</span>
+              }
+              @if (blockerOf(c.uid) !== undefined) {
+                <span class="slot__tag slot__tag--block">Bloccato</span>
+              }
+            </button>
+          </li>
+        } @empty {
+          <li class="row__empty">Nessuna creatura</li>
+        }
+      </ul>
+    </div>
+
+    <!-- ======== CENTRO: FASE, AZIONI, CRONACA ======== -->
+    <div class="mid">
+      <p class="mid__phase" aria-live="polite">{{ phaseLabel() }}</p>
+
+      <div class="mid__actions">
+        @if (targeting() !== null) {
+          <p class="mid__hint">Scegli un bersaglio per {{ targetingName() }}</p>
+          <button type="button" class="button button--ghost btn-sm" (click)="cancelTargeting()">
+            Annulla
+          </button>
+        } @else if (mustBlock()) {
+          <p class="mid__hint">Tocca una tua creatura, poi l’attaccante da fermare.</p>
+          <button type="button" class="button button--primary btn-sm" (click)="confirmBlocks()">
+            {{
+              blockCount() === 0
+                ? 'Nessun blocco'
+                : 'Conferma ' + blockCount() + (blockCount() === 1 ? ' blocco' : ' blocchi')
+            }}
+          </button>
+        } @else if (yourTurn()) {
+          @switch (g.phase) {
+            @case ('main') {
+              <button type="button" class="button button--primary btn-sm" (click)="goAttack()">
+                Attacca
+              </button>
+              <button type="button" class="button button--ghost btn-sm" (click)="endYourTurn()">
+                Fine turno
+              </button>
+            }
+            @case ('attack') {
+              <button
+                type="button"
+                class="button button--primary btn-sm"
+                [disabled]="attackers().length === 0"
+                (click)="confirmAttack()"
+              >
+                Attacca con {{ attackers().length }}
+              </button>
+              <button type="button" class="button button--ghost btn-sm" (click)="skipAttack()">
+                Nessun attacco
+              </button>
+            }
+            @case ('main2') {
+              <button type="button" class="button button--primary btn-sm" (click)="endYourTurn()">
+                Fine turno
+              </button>
+            }
+          }
+        }
+      </div>
+
+      <ol class="mid__log" aria-label="Cronaca della partita">
+        @for (line of recentLog(); track line.id) {
+          <li [class.mid__log--cpu]="line.who === 1">{{ line.text }}</li>
+        }
+      </ol>
+
+      @if (spotlight(); as s) {
+        @for (x of [s]; track x.key) {
+          <div class="spotlight" aria-hidden="true">
+            <p class="spotlight__label">La CPU gioca</p>
+            <app-meme-card [id]="x.id" />
+          </div>
+        }
+      }
+    </div>
+
+    <!-- ======== TU ======== -->
+    @let me = you()!;
+    <div class="side side--you" [style.--era]="ERAS[me.era].color">
+      <ul class="row" aria-label="Le tue creature">
+        @for (c of me.creatures; track c.uid) {
+          <li>
+            <button
+              type="button"
+              class="slot"
+              [class.is-target]="isTarget({ kind: 'card', uid: c.uid })"
+              [class.is-ready]="canBeAttacker(c)"
+              [class.is-attacking]="isAttacking(c.uid)"
+              [class.is-pending]="pendingBlocker() === c.uid"
+              [class.is-blocking]="isBlocking(c.uid)"
+              (click)="tapCard(c, $event)"
+            >
+              <app-meme-card [id]="c.id" [card]="c" [rev]="revision()" />
+              @if (isAttacking(c.uid)) {
+                <span class="slot__tag slot__tag--atk">Attacca</span>
+              }
+              @if (isBlocking(c.uid)) {
+                <span class="slot__tag slot__tag--block">Blocca</span>
+              }
+            </button>
+          </li>
+        } @empty {
+          <li class="row__empty">Nessuna creatura</li>
+        }
+      </ul>
+
+      <div class="bar">
+        <button
+          type="button"
+          class="bar__who"
+          [class.is-target]="isTarget({ kind: 'player', player: 0 })"
+          [disabled]="!isTarget({ kind: 'player', player: 0 })"
+          (click)="tapPlayer(0)"
+        >
+          <span class="bar__avatar" aria-hidden="true">{{ ERAS[me.era].art }}</span>
+          <span class="bar__name">Tu · {{ ERAS[me.era].name }}</span>
+          <span class="bar__life" [attr.aria-label]="me.life + ' vite'">❤ {{ me.life }}</span>
+        </button>
+        <span class="bar__chip" title="Hype disponibile / piattaforme"
+          >⚡ {{ hype(0).free }}/{{ hype(0).total }}</span
+        >
+        <span class="bar__chip" title="Carte nel mazzo">🂠 {{ me.library.length }}</span>
+      </div>
+
+      <ul class="hand" aria-label="La tua mano">
+        @for (c of me.hand; track c.uid) {
+          <li>
+            <button
+              type="button"
+              class="slot slot--hand"
+              [class.is-playable]="playable(c.uid)"
+              (click)="tapCard(c, $event)"
+            >
+              <app-meme-card [id]="c.id" />
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- ======== DETTAGLIO CARTA ======== -->
+    @if (selectedCard(); as c) {
+      <div class="scrim" (click)="closeDetail()"></div>
+      <div
+        #dialog
+        class="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Dettaglio carta"
+        tabindex="-1"
+      >
+        <app-meme-card
+          [id]="c.id"
+          [card]="g.players[c.owner].hand.includes(c) ? null : c"
+          [rev]="revision()"
+          [big]="true"
+        />
+        <div class="dialog__actions">
+          @if (c.owner === 0 && g.players[0].hand.includes(c)) {
+            <button
+              type="button"
+              class="button button--primary"
+              [disabled]="!playable(c.uid)"
+              (click)="playSelected()"
+            >
+              {{ playable(c.uid) ? 'Gioca' : 'Non puoi giocarla ora' }}
+            </button>
+          }
+          <button type="button" class="button button--ghost" (click)="closeDetail()">Chiudi</button>
+        </div>
+      </div>
+    }
+
+    <!-- ======== FINE PARTITA ======== -->
+    @if (g.winner !== null) {
+      <div class="scrim scrim--solid"></div>
+      <div class="dialog dialog--over" role="dialog" aria-modal="true" aria-labelledby="arena-over">
+        <p class="hud-label dialog__kicker">Turno {{ round() }}</p>
+        <p id="arena-over" class="dialog__title">
+          {{
+            g.winner === 0 ? 'Hai vinto! 🏆' : g.winner === 1 ? 'Ha vinto la CPU 💀' : 'Pareggio'
+          }}
+        </p>
+        <p class="dialog__text">Vittorie {{ stats().wins }} · Sconfitte {{ stats().losses }}</p>
+        <div class="dialog__actions">
+          <button type="button" class="button button--primary" (click)="backToPick()" autofocus>
+            Rigioca
+          </button>
+          <a class="button button--ghost" href="#contact">Parliamone</a>
+        </div>
+      </div>
+    }
+  } @else {
+    <!-- ======== SCELTA DEL MAZZO ======== -->
+    <div class="pick">
+      <p class="hud-label pick__kicker">Scegli il tuo mazzo</p>
+      <ul class="pick__grid">
+        @for (era of eras; track era.id) {
+          <li>
+            <button
+              #pickFirst
+              type="button"
+              class="deck"
+              [style.--era]="era.color"
+              (click)="start(era.id)"
+            >
+              <span class="deck__art" aria-hidden="true">{{ era.art }}</span>
+              <span class="deck__name">{{ era.name }}</span>
+              <span class="deck__years">{{ era.years }}</span>
+              <span class="deck__style">{{ era.style }}</span>
+            </button>
+          </li>
+        }
+        <li>
+          <button type="button" class="deck deck--random" (click)="randomDeck()">
+            <span class="deck__art" aria-hidden="true">🎲</span>
+            <span class="deck__name">A caso</span>
+            <span class="deck__style">Lascia scegliere al destino.</span>
+          </button>
+        </li>
+      </ul>
+      @if (stats().wins + stats().losses > 0) {
+        <p class="pick__stats">Vittorie {{ stats().wins }} · Sconfitte {{ stats().losses }}</p>
+      }
+    </div>
+  }
+</div>
+
+<details class="rules">
+  <summary>Come si gioca</summary>
+  <div class="rules__body">
+    <p>
+      Ogni giocatore parte con 20 vite e 7 carte. Vince chi porta l’altro a zero (o chi resta con il
+      mazzo pieno quando l’altro deve pescare e non può).
+    </p>
+    <ol>
+      <li>
+        <strong>Piattaforme.</strong> Una per turno. Ognuna dà 1 hype ⚡ a turno: l’hype paga le
+        carte.
+      </li>
+      <li>
+        <strong>Meme.</strong> Sono le creature. Appena entrano dormono 💤: attaccano dal turno
+        dopo.
+      </li>
+      <li>
+        <strong>Trend.</strong> Effetti istantanei: danni, carte, vite. Poi vanno nella pila degli
+        scarti.
+      </li>
+      <li>
+        <strong>Attacco.</strong> Le creature che attaccano si tappano. L’avversario può bloccarle
+        con le sue: le creature si scambiano danni, gli attaccanti non bloccati colpiscono il
+        giocatore.
+      </li>
+      <li>
+        <strong>Fine turno.</strong> I danni sulle creature si curano e i potenziamenti finiscono.
+      </li>
+    </ol>
+    <dl class="rules__keywords">
+      @for (k of keywords; track k.label) {
+        <div>
+          <dt>{{ k.label }}</dt>
+          <dd>{{ k.help }}</dd>
+        </div>
+      }
+    </dl>
+    <p>Tocca qualsiasi carta per leggerla per intero.</p>
+  </div>
+</details>

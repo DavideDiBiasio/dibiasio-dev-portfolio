@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, afterNextRender, afterRenderEffect, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { Game } from './game/game';
+import { MemeArena } from './memes/meme-arena';
 import { BOLT_PX, CLOUD_H, CLOUD_W, drawBolt, drawClouds, rainLayers, skyPaint, starVisibility } from './atmosphere';
 import { ALT0_ROW, PANO_H, PANO_W, PX_PER_DEG, azToX, daylight, drawPanorama } from './panorama';
 import { AU_KM, FONDI, Horizontal, MoonData, MoonPhase, PlanetName, SkyBody, SunData, compass, localSiderealTime, skyAt, toHorizontal } from './sky';
@@ -316,7 +316,7 @@ const starColor = (bv: number) =>
 const TELE = 4;
 
 @Component({
-  imports: [RouterOutlet, Game],
+  imports: [RouterOutlet, MemeArena],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
